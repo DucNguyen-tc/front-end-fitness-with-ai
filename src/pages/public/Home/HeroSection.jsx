@@ -1,7 +1,14 @@
 import { Button, Typography, Container, Box } from "@mui/material";
 import HeroSectionImage from "../../../assets/heroSectionImage.png"; // đúng đường dẫn
+import { useNavigate } from "react-router-dom";
 
 export default function HeroSection() {
+  const navigate = useNavigate();
+
+  const handleSignUp = () => {
+    navigate("/login", {state: {isSignUp: true}}); // điều hướng đến trang đăng ký
+  };
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       {/* Ảnh nền */}
@@ -25,14 +32,14 @@ export default function HeroSection() {
               color: "#d32f2f", // orange-500
             }}
           >
-            Step up your
+            Nâng cao thể lực
           </Typography>
 
           <Typography
             variant="h2"
             className="uppercase font-extrabold leading-tight text-white"
           >
-            Fitness <br /> with Gimnas
+            của bạn <br /> với KouDAn
           </Typography>
 
           <Button
@@ -48,8 +55,9 @@ export default function HeroSection() {
                 bgcolor: "#f44336",
               },
             }}
+            onClick={handleSignUp}
           >
-            Become Member
+            Đăng ký ngay
           </Button>
         </Box>
       </Container>

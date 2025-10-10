@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TextField, InputAdornment, IconButton } from "@mui/material";
-import { Visibility, VisibilityOff, Person, Lock } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { register } from "../../services/authService.js";
 
 export default function SignUpForm({ onSwitch }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,75 +21,116 @@ export default function SignUpForm({ onSwitch }) {
 
     if (!password) {
       newErrors.password = "Vui lòng nhập mật khẩu";
-    } else if (password.length < 6) {
-      newErrors.password = "Mật khẩu phải từ 6 ký tự trở lên";
+    } else if (password.length < 4) {
+      newErrors.password = "Mật khẩu phải từ 4 ký tự trở lên";
     }
 
     if (!username) {
       newErrors.username = "Vui lòng nhập tên người dùng";
+    } else if (username.length < 3) {
+      newErrors.username = "Tên người dùng phải từ 3 ký tự trở lên";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Đăng ký thành công 🎉");
+    if (!validate()) return;
+    try {
+      await register(username, email, password);
+      alert("Đăng kí thành công");
+      setErrors({});
+    } catch (error) {
+      setErrors({
+        general: error.response?.data?.message || "Đăng kí thất bại",
+      });
+    }
   };
 
   return (
     <div className="w-full max-w-md p-8 rounded-2xl shadow-xl bg-gray-900/80 backdrop-blur-lg">
-      <h2 className="text-3xl font-bold text-red-500 mb-6">Đăng Ký</h2>
+      <h2 className="text-3xl font-bold text-red-500 mb-6 text-center">
+        Đăng Ký
+      </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-y-6">
         <TextField
           fullWidth
-          variant="standard"
+          variant="outlined"
           label="Username"
-          slotProps={{
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          error={!!errors.username}
+          helperText={errors.username}
+          sx={{
+            "& label": {
+              color: "white",
+            },
+            "& label.Mui-focused": {
+              color: "white",
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray",
+              },
+              "&:hover fieldset": {
+                borderColor: "lightgray",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "white",
+              },
+            },
             input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Person className="text-gray-400" />
-                </InputAdornment>
-              ),
-              sx: { color: "white" },
+              color: "white",
             },
-            inputLabel: {
-              sx: { color: "gray.300" },
-            },
-          }}
-          sx={{
-            "& .MuiInput-underline:before": { borderBottomColor: "gray" },
           }}
         />
 
         <TextField
           fullWidth
-          variant="standard"
+          variant="outlined"
           label="Email"
-          slotProps={{
-            input: { sx: { color: "white" } },
-            inputLabel: { sx: { color: "gray.300" } },
-          }}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={!!errors.email}
+          helperText={errors.email}
           sx={{
-            "& .MuiInput-underline:before": { borderBottomColor: "gray" },
+            "& label": {
+              color: "white",
+            },
+            "& label.Mui-focused": {
+              color: "white",
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray",
+              },
+              "&:hover fieldset": {
+                borderColor: "lightgray",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "white",
+              },
+            },
+            input: {
+              color: "white",
+            },
           }}
         />
 
         <TextField
           fullWidth
-          variant="standard"
+          variant="outlined"
           type={showPassword ? "text" : "password"}
           label="Mật khẩu"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={!!errors.password}
+          helperText={errors.password}
           slotProps={{
             input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Lock className="text-gray-400" />
-                </InputAdornment>
-              ),
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
@@ -103,16 +145,35 @@ export default function SignUpForm({ onSwitch }) {
                   </IconButton>
                 </InputAdornment>
               ),
-              sx: { color: "white" },
-            },
-            inputLabel: {
-              sx: { color: "gray.300" },
             },
           }}
           sx={{
-            "& .MuiInput-underline:before": { borderBottomColor: "gray" },
+            "& label": {
+              color: "white",
+            },
+            "& label.Mui-focused": {
+              color: "white",
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "gray",
+              },
+              "&:hover fieldset": {
+                borderColor: "lightgray",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "white",
+              },
+            },
+            input: {
+              color: "white",
+            },
           }}
         />
+
+        {errors.general && (
+          <p className="text-red-400 text-sm">{errors.general}</p>
+        )}
 
         <button
           type="submit"

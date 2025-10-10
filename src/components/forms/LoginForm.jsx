@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { TextField, InputAdornment, IconButton } from "@mui/material";
-import { Visibility, VisibilityOff} from "@mui/icons-material";
-import { login } from "../../services/authService.js";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { login, getMyProfile } from "../../services/authService.js";
 import SignUpForm from "./SignUpForm.jsx";
+import { useLocation, useNavigate } from "react-router-dom";
+import { UserContext } from "../../stores/UserContext.jsx";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,6 +12,15 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const initialIsSignUp = location.state?.isSignUp ?? false;
+    setIsSignUp(initialIsSignUp);
+  }, [location.state]);
 
   if (isSignUp) {
     return <SignUpForm onSwitch={() => setIsSignUp(false)} />;
@@ -26,8 +37,8 @@ export default function LoginForm() {
 
     if (!password) {
       newErrors.password = "Vui lòng nhập mật khẩu";
-    } else if (password.length < 5) {
-      newErrors.password = "Mật khẩu phải từ 5 ký tự trở lên";
+    } else if (password.length < 4) {
+      newErrors.password = "Mật khẩu phải từ 4 ký tự trở lên";
     }
 
     setErrors(newErrors);
@@ -37,16 +48,19 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    const newErrors = {};
     try {
-      await login(email, password);
-      console.log("Đăng nhập thành công");
+      const response = await login(email, password);
       setErrors({});
-    }
-    catch (error) {
-      newErrors.general = error.response?.data?.message || "Tài khoản không tồn tại hoặc mật khẩu sai";
-      setErrors(newErrors);
-      return;
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
+      const myProfile = await getMyProfile();
+      setUser(myProfile.data);
+      localStorage.setItem("user", JSON.stringify(myProfile.data));
+      navigate("/user");
+    } catch (error) {
+      setErrors({
+        general: error.response?.data?.message || "Sai tài khoản hoặc mật khẩu",
+      });
     }
   };
 

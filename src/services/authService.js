@@ -26,6 +26,12 @@ export const register = async (name, email, password) => {
     return response.data;
 }
 
+//Get my profile
+export const getMyProfile = async () => {
+  const response = await apiClient.get(`${BASE_URL}/profile`);
+  return response.data;
+};
+
 export const logout = async () => {
   await axios.post(`${BASE_URL}/logout`);
   localStorage.removeItem("accessToken");

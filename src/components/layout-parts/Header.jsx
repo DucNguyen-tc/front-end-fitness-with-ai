@@ -1,7 +1,8 @@
-import { Button, Container, Typography, Box } from "@mui/material";
+import { Button, Typography, Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useMediaQuery } from "@mui/material";
 import logo from "../../assets/logo.png";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   const theme = useTheme();
@@ -14,15 +15,18 @@ const Header = () => {
       {/* Main Header */}
       <Box className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-6 mx-16">
         {/* Logo */}
+        <Link to="/">
         <Box className="flex items-center gap-2 mb-2 sm:mb-0">
           <img src={logo} alt="Logo" className="h-10 w-10" />
           <Typography
             variant={isMobile ? "h6" : "h5"}
             className="font-extrabold tracking-tight text-white"
           >
-            <span className="text-red-500">FITNESS</span> <br /> WITH US
+            <span className="text-red-500">FITNESS</span> <br /> KouDAn
           </Typography>
         </Box>
+        </Link>
+        
         {/* Navigation */}
         <nav>
           <ul
@@ -30,10 +34,10 @@ const Header = () => {
               isMobile ? "flex-col gap-2" : "gap-8"
             } text-sm font-medium`}
           >
-            {["HOME", "ABOUT US", "PAGES", "SERVICES", "BLOG"].map((item) => (
+            {["Trang chủ", "Về chúng tôi", "Dịch vụ", "Bài viết"].map((item) => (
               <li
                 key={item}
-                className="relative group cursor-pointer text-gray-200 hover:text-red-500 transition-colors duration-300"
+                className="relative group cursor-pointer text-lg text-gray-200 hover:text-red-500 transition-colors duration-300"
               >
                 {item}
                 <span className="absolute left-0 bottom-0 w-0 h-0.5 bg-red-500 group-hover:w-full transition-all duration-300" />
@@ -41,14 +45,16 @@ const Header = () => {
             ))}
           </ul>
         </nav>
+        <Link to="/login">
         <Button
           variant="contained"
           color="error"
           size="small"
           className="rounded-full px-4 py-1.5 font-semibold hover:bg-red-700 transition-colors"
         >
-          CONTACT US
-        </Button>
+          Đăng nhập
+        </Button></Link>
+        
       </Box>
     </header>
   );
