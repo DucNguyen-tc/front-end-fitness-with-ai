@@ -41,6 +41,7 @@ export default function SignUpForm({ onSwitch }) {
     try {
       await register(username, email, password);
       alert("Đăng kí thành công");
+      window.location.reload();
       setErrors({});
     } catch (error) {
       setErrors({

@@ -1,9 +1,11 @@
 import { Grid, Card, CardContent, Typography, Box } from "@mui/material";
 import { getAllMuscleGroups } from "../../../services/muscleGroupService";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function ExerciseGrid() {
   const [exercises, setExercises] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchMuscleGroups() {
@@ -24,6 +26,7 @@ export default function ExerciseGrid() {
       {exercises.map((exercise, index) => (
         <Grid key={index} size={{ xs: 12, sm: 6, md: 4 }}>
           <Card
+          onClick={() => navigate(`/user/exercise/${exercise.name}`)}  // 👈 chuyển trang
             sx={{
               position: "relative",
               overflow: "hidden",
@@ -97,7 +100,7 @@ export default function ExerciseGrid() {
                   letterSpacing: 0.5,
                 }}
               >
-                {exercise.name}
+                {exercise.displayName}
               </Typography>
             </CardContent>
           </Card>

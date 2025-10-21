@@ -6,15 +6,6 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   // Lấy user từ localStorage khi load lại trang
-  //   const savedUser = localStorage.getItem("user");
-  //   console.log(savedUser);
-  //   if (savedUser) {
-  //     setUser(JSON.parse(savedUser));
-  //   }
-  //   setLoading(false);
-  // }, []);
 
   useEffect(() => {
   const savedUser = localStorage.getItem("user");
