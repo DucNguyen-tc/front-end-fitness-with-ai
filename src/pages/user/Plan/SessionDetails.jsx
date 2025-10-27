@@ -25,7 +25,7 @@ const SessionDetails = ({
 }) => {
   const [workoutDetails, setWorkoutDetails] = useState([]);
   const [loading, setLoading] = useState(true);
-  console.log(workoutDetails);
+  console.log("session", session);
 
   useEffect(() => {
     const fetchWorkoutDetails = async () => {

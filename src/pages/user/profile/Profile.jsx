@@ -27,6 +27,8 @@ import {
 import Male from "@mui/icons-material/Male";
 import Female from "@mui/icons-material/Female";
 import { createUser, getUserByAccountId } from "../../../services/userService";
+import { createPlanByAI } from "../../../services/planService";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../../stores/UserContext";
 
 // === Dữ liệu cho các lựa chọn ===
@@ -93,7 +95,8 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const { user } = useContext(UserContext);
   const [isExistingProfile, setIsExistingProfile] = useState(false);
-  
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -109,14 +112,18 @@ export default function Profile() {
             height: userProfile.data.profile.height?.toString(),
             weight: userProfile.data.profile.weight?.toString(),
             bmi: userProfile.data.profile.bmi?.toString(),
-            bodyFatPercentageBefore: userProfile.data.profile.bodyFatPercentageBefore,
-            activityLevel: activityLevels.find(
-              (l) => l.label === userProfile.data.profile.activityLevel
-            )?.value ?? 0,
-            fitnessLevel: fitnessLevels.find(
-              (l) => l.label === userProfile.data.profile.fitnessLevel
-            )?.value ?? 0,
-            bodyFatPercentageAfter: userProfile.data.goals.bodyFatPercentageAfter || "",
+            bodyFatPercentageBefore:
+              userProfile.data.profile.bodyFatPercentageBefore,
+            activityLevel:
+              activityLevels.find(
+                (l) => l.label === userProfile.data.profile.activityLevel
+              )?.value ?? 0,
+            fitnessLevel:
+              fitnessLevels.find(
+                (l) => l.label === userProfile.data.profile.fitnessLevel
+              )?.value ?? 0,
+            bodyFatPercentageAfter:
+              userProfile.data.goals.bodyFatPercentageAfter || "",
             weightGoal: userProfile.data.goals.weightGoal?.toString() || "",
             timeFrame: userProfile.data.goals.timeFrame || 8,
           });
@@ -147,8 +154,8 @@ export default function Profile() {
       return "Vui lòng chọn mức mỡ cơ thể mục tiêu.";
     if (!form.weightGoal || form.weightGoal <= 0)
       return "Vui lòng nhập mục tiêu cân nặng.";
-    if(Number(form.weightGoal) > Number(form.weight)){
-      return "Mục tiêu cân nặng phải nhỏ hơn cân nặng hiện tại!"
+    if (Number(form.weightGoal) > Number(form.weight)) {
+      return "Mục tiêu cân nặng phải nhỏ hơn cân nặng hiện tại!";
     }
 
     // ✅ Kiểm tra nếu người dùng chọn bodyFatAfter >= bodyFatBefore
@@ -186,70 +193,87 @@ export default function Profile() {
   };
 
   const handleSubmit = async () => {
-  const validationError = validateForm();
-  if (validationError) {
-    setSnackbarSeverity("error");
-    setError(validationError);
-    setOpenSnackbar(true);
-    return;
-  }
+    const validationError = validateForm();
+    if (validationError) {
+      setSnackbarSeverity("error");
+      setError(validationError);
+      setOpenSnackbar(true);
+      return;
+    }
 
-  try {
-    setLoading(true);
-    setSnackbarSeverity("success");
-    setError("Huấn luyện viên AI đang tạo lộ trình riêng cho bạn...");
-    setOpenSnackbar(true);
+    try {
+      setLoading(true);
 
-    const payload = {
-      accountId: user.sub,
-      profile: {
-        gender: form.gender,
-        age: Number(form.age),
-        height: Number(form.height),
-        weight: Number(form.weight),
-        bmi: Number(form.bmi),
-        bodyFatPercentageBefore: form.bodyFatPercentageBefore,
-        activityLevel: activityLevels.find((l) => l.value === form.activityLevel)?.label,
-        fitnessLevel: fitnessLevels.find((l) => l.value === form.fitnessLevel)?.label,
-      },
-      goals: {
-        bodyFatPercentageAfter: form.bodyFatPercentageAfter,
-        weightGoal: Number(form.weightGoal),
-        timeFrame: Number(form.timeFrame),
-      },
-    };
+      setSnackbarSeverity("success");
+      setError("Huấn luyện viên AI đang tạo lộ trình riêng cho bạn...");
 
-    console.log("Dữ liệu gửi đi:", payload);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    // gọi API backend
-    const response = await createUser(payload);
-    console.log("Phản hồi từ server:", response);
+      const payload = {
+        accountId: user.sub,
+        profile: {
+          gender: form.gender,
+          age: Number(form.age),
+          height: Number(form.height),
+          weight: Number(form.weight),
+          bmi: Number(form.bmi),
+          bodyFatPercentageBefore: form.bodyFatPercentageBefore,
+          activityLevel: activityLevels.find(
+            (l) => l.value === form.activityLevel
+          )?.label,
+          fitnessLevel: fitnessLevels.find((l) => l.value === form.fitnessLevel)
+            ?.label,
+        },
+        goals: {
+          bodyFatPercentageAfter: form.bodyFatPercentageAfter,
+          weightGoal: Number(form.weightGoal),
+          timeFrame: Number(form.timeFrame),
+        },
+      };
 
-    // hiển thị thông báo thành công
-    setError("🎯 Lộ trình của bạn đã sẵn sàng! Hãy bắt đầu tuần đầu tiên nào!");
-    setSnackbarSeverity("success");
-    setOpenSnackbar(true);
+      // gọi API backend
+      const response = await createUser(payload);
+      const plan = await createPlanByAI(response.data._id);
 
-  } catch (err) {
-    console.error("Lỗi khi tạo người dùng:", err);
-    setSnackbarSeverity("error");
-    setError("Đã có lỗi xảy ra khi tạo hồ sơ. Vui lòng thử lại!");
-    setOpenSnackbar(true);
-  } finally {
-    setLoading(false);
-  }
-};
+      console.log("Lộ trình tạo ra:", plan);
+
+      // hiển thị thông báo thành công
+      setError(
+        "🎯 Lộ trình của bạn đã sẵn sàng! Hãy bắt đầu tuần đầu tiên nào!"
+      );
+      setSnackbarSeverity("success");
+      setOpenSnackbar(true);
+
+      setTimeout(() => {
+        navigate("/user/plan");
+      }, 2000);
+    } catch (err) {
+      console.error("Lỗi khi tạo người dùng:", err);
+      setSnackbarSeverity("error");
+      setError("Đã có lỗi xảy ra khi tạo hồ sơ. Vui lòng thử lại!");
+      setOpenSnackbar(true);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Box className="bg-slate-100 min-h-screen py-10">
       <Container maxWidth="md">
-        <Typography variant="h4" component="h1" className="text-center font-bold text-gray-800 mb-8">
+        <Typography
+          variant="h4"
+          component="h1"
+          className="text-center font-bold text-gray-800 mb-8"
+        >
           Hồ Sơ Sức Khỏe Của Bạn 🏃
         </Typography>
 
         {/* --- Card 1: Thông tin cơ bản --- */}
         <Card className="shadow-lg rounded-2xl mb-6">
           <CardContent className="p-6">
-            <Typography variant="h6" className="font-semibold text-gray-700 pb-6">
+            <Typography
+              variant="h6"
+              className="font-semibold text-gray-700 pb-6"
+            >
               Thông tin cơ bản
             </Typography>
             <Grid container spacing={3} alignItems="flex-end">
@@ -355,7 +379,10 @@ export default function Profile() {
         {/* --- Card 2: Mức mỡ và hoạt động --- */}
         <Card className="shadow-lg rounded-2xl mb-6">
           <CardContent className="p-6">
-            <Typography variant="h6" className="font-semibold text-gray-700 pb-6">
+            <Typography
+              variant="h6"
+              className="font-semibold text-gray-700 pb-6"
+            >
               Chỉ số & Mức độ
             </Typography>
             <Grid container spacing={3}>
@@ -427,7 +454,10 @@ export default function Profile() {
         {/* --- Card 3: Mục tiêu --- */}
         <Card className="shadow-lg rounded-2xl">
           <CardContent className="p-6">
-            <Typography variant="h6" className="font-semibold text-gray-700 pb-6">
+            <Typography
+              variant="h6"
+              className="font-semibold text-gray-700 pb-6"
+            >
               Mục tiêu của bạn
             </Typography>
             <Grid container spacing={3}>
@@ -509,7 +539,9 @@ export default function Profile() {
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            {isDisabled ? "Đã tạo hồ sơ" :loading ? (
+            {isDisabled ? (
+              "Đã tạo hồ sơ"
+            ) : loading ? (
               <Box display="flex" alignItems="center" gap={2}>
                 <CircularProgress size={24} color="inherit" />
                 <Typography fontSize={16} fontWeight="bold">

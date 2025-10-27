@@ -22,6 +22,7 @@ export default function WorkoutList() {
   useEffect(() => {
     async function fetchWorkouts() {
       const res = await getWorkoutByMuscleGroup(muscleGroupName);
+      console.log(res.data);
       setWorkouts(res.data);
     }
     fetchWorkouts();

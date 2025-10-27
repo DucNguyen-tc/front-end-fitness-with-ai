@@ -5,7 +5,6 @@ import Profile from "../pages/user/profile/Profile";
 import WorkoutList from "../pages/user/Exercise/Workout";
 import WeeklyWorkoutPlan from "../pages/user/Plan/Plan";
 import Process from "../pages/user/Process/Process";
-import WorkoutScreen from "../pages/user/Plan/test";
 
 function UserRoute() {
   return (
@@ -16,7 +15,6 @@ function UserRoute() {
         <Route path="profile" element={<Profile />} />
         <Route path="plan" element={<WeeklyWorkoutPlan />} />
         <Route path="process" element={<Process />} />
-        <Route path="test" element={<WorkoutScreen />} />
       </Route>
     </Routes>
   );

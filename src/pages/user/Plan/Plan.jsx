@@ -18,6 +18,8 @@ const WorkoutPlanDashboard = () => {
   const [userData, setUserData] = useState(null);
   const { user } = useContext(UserContext);
 
+ 
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -44,6 +46,7 @@ const WorkoutPlanDashboard = () => {
     fetchPlan();
   }, [userData]);
 
+
   return (
     <Box p={3} sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
       {!selectedWeek && (
@@ -62,14 +65,6 @@ const WorkoutPlanDashboard = () => {
         />
       )}
 
-      {/* {selectedSession && (
-        <SessionDetails
-          session={selectedSession}
-          onBack={() => setSelectedSession(null)}
-          onSelectWorkout={setSelectedWorkout}
-        />
-      )} */}
-
       {selectedSession && !selectPlayingSession && (
         <SessionDetails
           session={selectedSession}
@@ -82,7 +77,9 @@ const WorkoutPlanDashboard = () => {
       {selectPlayingSession && (
         <WorkoutPlayer
           workouts={selectPlayingSession}
-          onExit={() => setSelectPlayingSession(null)} // thoát khỏi chế độ tập
+          onExit={() => setSelectPlayingSession(null)}
+          sessionId={selectedSession._id}
+          planId={selectedWeek._id}
         />
       )}
 
