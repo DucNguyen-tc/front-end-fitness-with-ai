@@ -56,7 +56,7 @@ const Sidebar = () => {
             <Timeline fontSize="large" /> Kế hoạch tập luyện
           </NavLink>
           <NavLink
-            to="/user/process"
+            to="/user/progress"
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2 rounded-lg transition ${
                 isActive

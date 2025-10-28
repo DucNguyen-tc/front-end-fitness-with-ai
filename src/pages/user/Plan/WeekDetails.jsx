@@ -52,7 +52,7 @@ const WeekDetails = ({ week, onBack, onSelectSession }) => {
     // Nếu không phải buổi đầu tiên → kiểm tra buổi trước
     const previousSession = index > 0 ? week.sessions[index - 1] : null;
     const isLocked =
-      previousSession && previousSession.status !== "COMPLETE";
+      previousSession && previousSession.status !== "COMPLETED";
 
     return (
       <Grid item xs={12} sm={6} md={4} key={session.sessionNumber}>

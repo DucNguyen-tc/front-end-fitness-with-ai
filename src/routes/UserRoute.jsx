@@ -4,7 +4,7 @@ import ExerciseGrid from "../pages/user/Exercise/ExerciseGrid";
 import Profile from "../pages/user/profile/Profile";
 import WorkoutList from "../pages/user/Exercise/Workout";
 import WeeklyWorkoutPlan from "../pages/user/Plan/Plan";
-import Process from "../pages/user/Process/Process";
+import Progress from "../pages/user/Progress/Progress";
 
 function UserRoute() {
   return (
@@ -14,7 +14,7 @@ function UserRoute() {
         <Route path="exercise/:muscleGroupName" element={<WorkoutList />} />
         <Route path="profile" element={<Profile />} />
         <Route path="plan" element={<WeeklyWorkoutPlan />} />
-        <Route path="process" element={<Process />} />
+        <Route path="progress" element={<Progress />} />
       </Route>
     </Routes>
   );

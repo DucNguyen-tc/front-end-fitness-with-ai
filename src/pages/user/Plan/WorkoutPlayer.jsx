@@ -13,9 +13,6 @@ import Music from "../../../assets/music.mp3";
 
 const WorkoutPlayer = ({ workouts, onExit, sessionId, planId }) => {
   if (!workouts || workouts.length === 0) return null;
-  console.log(workouts);
-  console.log(sessionId);
-  console.log("Plan nè", planId);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(workouts[0]?.workTime || 30);
@@ -98,8 +95,8 @@ const WorkoutPlayer = ({ workouts, onExit, sessionId, planId }) => {
 
   const handleFinishWorkout = async () => {
     try {
-      const request = { status: "COMPLETED" };
-      await updateSessionStatus(planId, sessionId, request);
+      const targetDate = new Date();
+      await updateSessionStatus(planId, sessionId, "COMPLETED", targetDate);
       console.log("✅ Cập nhật trạng thái session thành công!");
     } catch (error) {
       console.error("❌ Lỗi khi cập nhật session:", error);

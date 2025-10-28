@@ -17,7 +17,7 @@ export const updatePlan = async (planId, plan) => {
     return response.data;
 };
 
-export const updateSessionStatus = async (planId, sessionId, status) => {
-    const response = await apiClient.patch(`${BASE_URL}/${planId}/sessions/${sessionId}`, { status });
+export const updateSessionStatus = async (planId, sessionId, status, targetDate) => {
+    const response = await apiClient.patch(`${BASE_URL}/${planId}/sessions/${sessionId}`, { status, targetDate });
     return response.data;
 };

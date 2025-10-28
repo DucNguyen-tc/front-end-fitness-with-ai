@@ -56,7 +56,8 @@ export default function LoginForm() {
       const myProfile = await getMyProfile();
       setUser(myProfile.data);
       localStorage.setItem("user", JSON.stringify(myProfile.data));
-      navigate("/user");
+      if (myProfile.data.role === "admin") navigate("/admin");
+      else navigate("/user");
     } catch (error) {
       setErrors({
         general: error.response?.data?.message || "Sai tài khoản hoặc mật khẩu",
