@@ -15,6 +15,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { getWorkoutById } from "../../../services/workoutService";
 
 const SessionDetails = ({
@@ -45,7 +46,7 @@ const SessionDetails = ({
       } catch (error) {
         console.error("Lỗi lấy chi tiết bài tập:", error);
       } finally {
-        setLoading(false); // ✅ báo React render lại sau khi merge xong
+        setLoading(false);
       }
     };
     fetchWorkoutDetails();
@@ -58,7 +59,7 @@ const SessionDetails = ({
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between", // 👈 thêm dòng này
+          justifyContent: "space-between",
           mb: 4,
         }}
       >
@@ -68,10 +69,10 @@ const SessionDetails = ({
             onClick={onBack}
             sx={{
               mr: 2,
-              bgcolor: "primary.main",
+              bgcolor: "#dc2d2d",
               color: "white",
               "&:hover": {
-                bgcolor: "primary.dark",
+                bgcolor: "#c62828",
                 transform: "scale(1.1)",
               },
               transition: "all 0.2s ease",
@@ -82,9 +83,9 @@ const SessionDetails = ({
           <Typography
             variant="h4"
             fontWeight="bold"
-            color="primary"
+            color="white"
             sx={{
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              textShadow: "0 2px 4px rgba(0,0,0,0.3)",
             }}
           >
             Buổi tập thứ {session.sessionNumber}
@@ -94,9 +95,19 @@ const SessionDetails = ({
         {/* Nút bên phải */}
         <Button
           variant="contained"
-          color="primary"
           size="large"
-          sx={{ borderRadius: 2, fontWeight: "bold" }}
+          sx={{ 
+            borderRadius: 2, 
+            fontWeight: "bold",
+            bgcolor: "#dc2d2d",
+            '&:hover': {
+              bgcolor: "#c62828",
+            },
+            '&:disabled': {
+              bgcolor: '#666',
+              color: '#999'
+            }
+          }}
           disabled={loading || workoutDetails.length === 0}
           onClick={() => onStartWorkout(workoutDetails)}
         >
@@ -108,10 +119,7 @@ const SessionDetails = ({
       <Grid container spacing={3}>
         {workoutDetails.map((exercise) => (
           <Grid
-            item
-            xs={12}
-            sm={6}
-            md={4}
+             size={{ xs: 12, sm: 6, md: 4}}
             key={exercise.workoutId}
             sx={{ display: "flex" }}
           >
@@ -119,41 +127,76 @@ const SessionDetails = ({
               onClick={() => onSelectWorkout(exercise)}
               sx={{
                 flex: 1,
-                height: 500,
-                width: 280,
+                height: 550,
                 cursor: "pointer",
                 borderRadius: 3,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                background: "linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)",
-                border: "1px solid #e0e0e0",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                background: "linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)",
+                border: "2px solid #333",
                 transition: "all 0.3s ease-in-out",
                 display: "flex",
                 flexDirection: "column",
+                position: "relative",
+                overflow: "hidden",
                 "&:hover": {
                   transform: "translateY(-8px)",
-                  boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                  background:
-                    "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+                  boxShadow: "0 12px 24px rgba(220, 45, 45, 0.3)",
+                  border: "2px solid #dc2d2d",
+                  background: "linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%)",
                 },
               }}
             >
-              {/* Ảnh với kích thước cố định và không bị bóp méo */}
-              <CardMedia
-                component="img"
+              {/* Play button overlay */}
+              <Box
                 sx={{
-                  height: 270, // Chiều cao cố định
-                  width: "100%", // Chiều rộng 100%
-                  objectFit: "cover", // Giữ tỷ lệ ảnh, cắt phần thừa nếu cần
-                  objectPosition: "center", // Căn giữa ảnh
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  zIndex: 2,
                 }}
-                image={exercise.imageURL}
-                alt={exercise.name}
-              />
+              >
+                <Chip
+                  icon={<PlayArrowIcon />}
+                  label="Xem chi tiết"
+                  size="small"
+                  sx={{
+                    bgcolor: "rgba(220, 45, 45, 0.9)",
+                    color: "white",
+                    fontWeight: "bold",
+                    backdropFilter: "blur(10px)",
+                  }}
+                />
+              </Box>
+
+              {/* Ảnh với overlay gradient */}
+              <Box sx={{ position: "relative" }}>
+                <CardMedia
+                  component="img"
+                  sx={{
+                    height: 320,
+                    width: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center",
+                  }}
+                  image={exercise.imageURL}
+                  alt={exercise.name}
+                />
+                {/* Gradient overlay */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: "60%",
+                    background: "linear-gradient(to top, rgba(26,26,26,0.9) 0%, transparent 100%)",
+                  }}
+                />
+              </Box>
 
               <CardContent
                 sx={{
                   p: 3,
-                  position: "relative",
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
@@ -168,7 +211,7 @@ const SessionDetails = ({
                   fontWeight="bold"
                   sx={{
                     mb: 2,
-                    pr: exercise.id ? 6 : 0,
+                    color: "white",
                     minHeight: "48px",
                     display: "flex",
                     alignItems: "center",
@@ -187,12 +230,13 @@ const SessionDetails = ({
                     sx={{
                       p: 1.5,
                       borderRadius: 2,
-                      bgcolor: "rgba(25, 118, 210, 0.08)",
+                      bgcolor: "rgba(220, 45, 45, 0.1)",
+                      border: "1px solid rgba(220, 45, 45, 0.3)",
                     }}
                   >
-                    <AccessTimeIcon fontSize="small" color="primary" />
-                    <Typography variant="body2" fontWeight="medium">
-                      Thời gian: <strong>{exercise.workTime} giây</strong>
+                    <AccessTimeIcon fontSize="small" sx={{ color: "#dc2d2d" }} />
+                    <Typography variant="body2" fontWeight="medium" sx={{ color: "#ccc" }}>
+                      Thời gian: <strong style={{ color: "white", marginLeft: 4 }}>{exercise.workTime} giây</strong>
                     </Typography>
                   </Stack>
 
@@ -204,13 +248,14 @@ const SessionDetails = ({
                     sx={{
                       p: 1.5,
                       borderRadius: 2,
-                      bgcolor: "rgba(255, 87, 34, 0.08)",
+                      bgcolor: "rgba(255, 152, 0, 0.1)",
+                      border: "1px solid rgba(255, 152, 0, 0.3)",
                     }}
                   >
-                    <LocalFireDepartmentIcon fontSize="small" color="error" />
-                    <Typography variant="body2" fontWeight="medium">
+                    <LocalFireDepartmentIcon fontSize="small" sx={{ color: "#ff9800" }} />
+                    <Typography variant="body2" fontWeight="medium" sx={{ color: "#ccc" }}>
                       Calories:{" "}
-                      <strong>
+                      <strong style={{ color: "white", marginLeft: 4 }}>
                         {Math.round(
                           (exercise.caloriesBurnedPerMinute *
                             exercise.workTime) /
@@ -221,6 +266,16 @@ const SessionDetails = ({
                     </Typography>
                   </Stack>
                 </Stack>
+
+                {/* Footer với số hiệp và lặp lại (nếu có) */}
+                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2, pt: 2, borderTop: "1px solid #333" }}>
+                  <Typography variant="caption" sx={{ color: "#ccc" }}>
+                    {exercise.sets ? `${exercise.sets} hiệp` : "1 hiệp"}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "#ccc" }}>
+                    {exercise.reps ? `${exercise.reps} lần` : "Tối đa"}
+                  </Typography>
+                </Box>
               </CardContent>
             </Card>
           </Grid>
