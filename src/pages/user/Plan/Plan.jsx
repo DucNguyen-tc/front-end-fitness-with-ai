@@ -48,7 +48,7 @@ const WorkoutPlanDashboard = () => {
 
 
   return (
-    <Box p={3} sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+    <Box p={3} sx={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)', minHeight: "100vh" }}>
       {!selectedWeek && (
         <WeeksList
           weeks={plan}

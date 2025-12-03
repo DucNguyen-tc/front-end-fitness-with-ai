@@ -1,334 +1,335 @@
-import React, { useState, useEffect, useContext } from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Snackbar,
+import React, { useEffect, useState, useContext } from "react";
+import { 
+  Box, 
+  Typography, 
+  Grid, 
+  Snackbar, 
   Alert,
-  Stack,
-  ToggleButton,
-  IconButton,
+  Fade,
+  Backdrop,
+  Zoom
 } from "@mui/material";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
-import MonitorWeightIcon from "@mui/icons-material/MonitorWeight";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from "../../../stores/UserContext";
 import { getUserByAccountId } from "../../../services/userService";
 import { getPlanByUserId } from "../../../services/planService";
 
+import WeightChart from "./WeightChart";
+import CalorieChart from "./CalorieChart";
+import WeeklyFeedback from "./WeeklyFeedBack";
+
 const Progress = () => {
-  const [difficulty, setDifficulty] = useState("");
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [plan, setPlan] = useState([]);
   const { user } = useContext(UserContext);
   const [userData, setUserData] = useState(null);
-  const [offset, setOffset] = useState(0); // số tuần dịch chuyển
+  const [plan, setPlan] = useState([]);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiProgress, setAiProgress] = useState(0);
+  const navigate = useNavigate(); // ✅ Dùng để chuyển trang
 
-
-  // ================================
-  // FETCH USER
-  // ================================
+  // Lấy thông tin user
   useEffect(() => {
     const fetchUser = async () => {
-      try {
-        if (!user?.sub) return;
-        const data = await getUserByAccountId(user.sub);
-        setUserData(data);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
+      if (!user?.sub) return;
+      const data = await getUserByAccountId(user.sub);
+      setUserData(data);
     };
     fetchUser();
   }, [user?.sub]);
 
-  // ================================
-  // FETCH PLAN
-  // ================================
+  // Lấy plan theo user
   useEffect(() => {
     const fetchPlan = async () => {
-      try {
-        if (!userData?.data?._id) return;
-        const response = await getPlanByUserId(userData.data._id);
-        setPlan(response.data || []);
-      } catch (error) {
-        console.error("Error fetching plan:", error);
-      }
+      if (!userData?.data?._id) return;
+      const response = await getPlanByUserId(userData.data._id);
+      setPlan(response.data || []);
     };
     fetchPlan();
   }, [userData?.data?._id]);
 
-  // ================================
-  // CÂN NẶNG GIẢ LẬP
-  // ================================
-  const weightData = [
-    { week: "Tuần 1", weight: 66 },
-    { week: "Tuần 2", weight: 65.3 },
-    { week: "Tuần 3", weight: 65 },
-    { week: "Tuần 4", weight: 64.5 },
-  ];
+  // Tìm tuần vừa hoàn thành nhưng chưa có đánh giá AI
+  const weekToEvaluate = plan?.find(
+    (w) =>
+      w.status === "COMPLETED" &&
+      (w.aiDecision === null || w.aiDecision === undefined)
+  );
 
-  // ================================
-  // CALORIES TRONG TUẦN
-  // ================================
-// ================================
-  // CALORIES TRONG TUẦN
-  // ================================
-  const allSessions = plan.flatMap((p) => p.sessions || []);
-  const today = new Date();
-  
-  // TÍNH TOÁN THỨ 2
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - today.getDay() + 1 + offset * 7);
-  // --- FIX: Chuẩn hóa về 00:00:00 (đầu ngày) ---
-  monday.setHours(0, 0, 0, 0);
+  // Hiệu ứng AI xử lý
+  const simulateAIProcessing = () => {
+    setShowAIModal(true);
+    setAiProgress(0);
 
-  // TÍNH TOÁN CHỦ NHẬT
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  // --- FIX: Chuẩn hóa về 23:59:59 (cuối ngày) ---
-  sunday.setHours(23, 59, 59, 999);
+    const steps = [
+      { progress: 25 },
+      { progress: 50 },
+      { progress: 75 },
+      { progress: 95 },
+    ];
 
-  // Tạo mảng 7 ngày (thứ 2 -> CN)
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
-  });
+    steps.forEach((step, index) => {
+      setTimeout(() => {
+        setAiProgress(step.progress);
+      }, (index + 1) * 800);
+    });
 
-  // Lọc session trong tuần hiện tại
-  const weeklySessions = allSessions.filter((s) => {
-    // Thêm kiểm tra s.targetDate để code an toàn hơn
-    if (!s.targetDate) {
-      return false;
-    }
-    
-    const d = new Date(s.targetDate);
-    // console.log("date", d); // Giờ bạn có thể log lại để xem
-    // console.log("status", s.status); // (Bạn log nhầm "monday" thành "status")
+    setTimeout(() => {
+      setShowAIModal(false);
+      setOpenSnackbar(true);
 
-    // Phép so sánh giờ đã chính xác
-    return d >= monday && d <= sunday && s.status === "COMPLETED";
-  });
-
-  // Ghép calories theo ngày (nếu có)
-  const calorieMap = {};
-  weeklySessions.forEach((s) => {
-    const key = new Date(s.targetDate).toLocaleDateString("vi-VN");
-    calorieMap[key] = (calorieMap[key] || 0) + (s.caloriesBurned || 0);
-  });
-
-  // Tạo dữ liệu 7 ngày
-  const calorieData = weekDays.map((d) => ({
-    day: d.toLocaleDateString("vi-VN", { weekday: "short" }), // "Th 2", "Th 3"...
-    calo: calorieMap[d.toLocaleDateString("vi-VN")] || 0,
-  }));
-
-  console.log("calorieData", calorieData);
-  console.log("allSessions", allSessions);
-  console.log("weeklySessions", weeklySessions);
-
-  const getPeriodLabel = () => {
-    return `Từ ${monday.toLocaleDateString("vi-VN")} → ${sunday.toLocaleDateString("vi-VN")}`;
+      // ✅ Sau khi hiện thông báo, tự chuyển đến trang kế hoạch
+      setTimeout(() => {
+        navigate("/user/plan");
+      }, 2000);
+    }, 4000);
   };
 
-  const handleSubmit = () => {
-    if (!difficulty) return;
-    setOpenSnackbar(true);
+  const handleFeedbackSubmitted = () => {
+    simulateAIProcessing();
   };
 
-  // ================================
-  // RENDER
-  // ================================
   return (
-    <Box p={3} sx={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}>
-      <Typography variant="h4" gutterBottom fontWeight="bold">
-        📊 Bảng điều khiển tiến độ
-      </Typography>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
+      color: 'white',
+      p: 3
+    }}>
+      {/* Header */}
+      <Fade in timeout={1000}>
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            sx={{
+              background: 'linear-gradient(45deg, #ffffff, #dc2d2d)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              color: 'transparent',
+              mb: 1
+            }}
+          >
+            📊 Bảng Điều Khiển Tiến Độ
+          </Typography>
+          <Typography variant="h6" sx={{ color: '#ccc' }}>
+            Theo dõi hành trình tập luyện và sức khỏe của bạn
+          </Typography>
+        </Box>
+      </Fade>
 
       <Grid container spacing={3}>
-        {/* CỘT TRÁI */}
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <Stack spacing={3}>
-            {/* --- Theo dõi cân nặng --- */}
-            <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
+        {/* Biểu đồ cân nặng */}
+        <Grid size={{ xs: 12 }}>
+          <WeightChart userData={userData} plan={plan} />
+        </Grid>
+
+        {/* Biểu đồ calo */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <CalorieChart plan={plan} />
+        </Grid>
+
+        {/* Khối đánh giá tuần */}
+        {weekToEvaluate ? (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <WeeklyFeedback
+              week={weekToEvaluate}
+              onSubmitted={handleFeedbackSubmitted}
+            />
+          </Grid>
+        ) : (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Zoom in timeout={800}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100%",
+                  p: 4,
+                  background: 'linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%)',
+                  borderRadius: 3,
+                  border: '2px solid #333',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                }}
+              >
+                <Typography 
+                  variant="h6" 
+                  fontWeight="600" 
                   mb={2}
+                  sx={{ color: 'white' }}
                 >
-                  <Box>
-                    <Typography variant="h6" fontWeight="600">
-                      📈 Theo dõi cân nặng
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Xu hướng giảm ổn định
-                    </Typography>
-                  </Box>
-                  <Box textAlign="right">
-                    <Typography
-                      variant="h4"
-                      fontWeight="bold"
-                      color="secondary.main"
-                    >
-                      64.5 kg
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Hiện tại
-                    </Typography>
-                  </Box>
-                </Box>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={weightData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="week" />
-                    <YAxis domain={[63, 67]} />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="weight"
-                      stroke="#9c27b0"
-                      strokeWidth={3}
-                      dot={{ r: 5 }}
-                      activeDot={{ r: 8 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* --- Calories --- */}
-            <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={1}
+                  🕒 Hiện chưa có tuần nào cần đánh giá
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ color: '#ccc', textAlign: 'center' }}
                 >
-                  <Box>
-                    <Typography variant="h6" fontWeight="600">
-                      🔥 Thống kê Calories (tuần)
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <IconButton onClick={() => setOffset((prev) => prev - 1)}>
-                      <ArrowBackIosNewIcon fontSize="small" />
-                    </IconButton>
-                    <Typography variant="body2" color="text.secondary">
-                      {getPeriodLabel()}
-                    </Typography>
-                    <IconButton onClick={() => setOffset((prev) => prev + 1)}>
-                      <ArrowForwardIosIcon fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                </Box>
-
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={calorieData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="calo" fill="#1976d2" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Grid>
-
-        {/* CỘT PHẢI */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Stack spacing={3}>
-            <Card sx={{ borderRadius: 4, boxShadow: 3 }}>
-              <CardContent>
-                <Typography variant="h6" fontWeight="600" mb={2}>
-                  Chỉ số khác
+                  Hãy hoàn tất các buổi tập để mở đánh giá và tổng kết tuần tiếp theo.
                 </Typography>
-                <Stack spacing={2}>
-                  <Box display="flex" alignItems="center">
-                    <FitnessCenterIcon color="success" sx={{ mr: 1.5 }} />
-                    <Typography>
-                      Mỡ cơ thể: <strong>18.2%</strong>
-                    </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center">
-                    <MonitorWeightIcon color="warning" sx={{ mr: 1.5 }} />
-                    <Typography>
-                      Buổi đã tập: <strong>4/5 buổi</strong>
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-
-            <Card sx={{ borderRadius: 4, boxShadow: 3, p: 1 }}>
-              <CardContent>
-                <Typography variant="h6" mb={2} fontWeight="600">
-                  🧠 Đánh giá tuần này
-                </Typography>
-                <Typography variant="body2" color="text.secondary" mb={2}>
-                  Phản hồi của bạn giúp AI điều chỉnh kế hoạch cho tuần tới phù hợp hơn.
-                </Typography>
-                <Stack direction="row" spacing={1}>
-                  {["easy", "medium", "hard"].map((level) => (
-                    <ToggleButton
-                      key={level}
-                      value={level}
-                      selected={difficulty === level}
-                      onChange={() => setDifficulty(level)}
-                      fullWidth
-                    >
-                      {level === "easy"
-                        ? "Dễ"
-                        : level === "medium"
-                        ? "Vừa sức"
-                        : "Khó"}
-                    </ToggleButton>
-                  ))}
-                </Stack>
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  disabled={!difficulty}
-                  sx={{ mt: 2 }}
-                  fullWidth
-                >
-                  Gửi đánh giá
-                </Button>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Grid>
+              </Box>
+            </Zoom>
+          </Grid>
+        )}
       </Grid>
 
+      {/* Modal AI Processing */}
+      <Backdrop
+        open={showAIModal}
+        sx={{
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          zIndex: 9999,
+        }}
+      >
+        <Fade in={showAIModal}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+              borderRadius: 4,
+              p: 6,
+              border: '2px solid #dc2d2d',
+              boxShadow: '0 20px 60px rgba(220, 45, 45, 0.3)',
+              maxWidth: 400,
+              width: '90%',
+              textAlign: 'center',
+            }}
+          >
+            <Box
+              sx={{
+                position: 'relative',
+                mb: 3,
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: -10,
+                  left: -10,
+                  right: -10,
+                  bottom: -10,
+                  background: 'linear-gradient(45deg, #dc2d2d, #ff6b6b)',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': { opacity: 0.5, transform: 'scale(1)' },
+                    '50%': { opacity: 0.8, transform: 'scale(1.1)' },
+                  }
+                }
+              }}
+            >
+              <Typography
+                variant="h2"
+                sx={{
+                  position: 'relative',
+                  zIndex: 1,
+                  animation: 'float 3s ease-in-out infinite',
+                  '@keyframes float': {
+                    '0%, 100%': { transform: 'translateY(0px)' },
+                    '50%': { transform: 'translateY(-10px)' },
+                  }
+                }}
+              >
+                🤖
+              </Typography>
+            </Box>
+
+            <Typography variant="h5" fontWeight="bold" sx={{ color: 'white', mb: 2 }}>
+              AI Đang Phân Tích
+            </Typography>
+
+            <Typography variant="body1" sx={{ color: '#ccc', mb: 4 }}>
+              {aiProgress < 25 && "🧠 AI đang phân tích kết quả tập luyện..."}
+              {aiProgress >= 25 && aiProgress < 50 && "📊 Đánh giá chỉ số sức khỏe..."}
+              {aiProgress >= 50 && aiProgress < 75 && "🎯 Tối ưu hóa lộ trình..."}
+              {aiProgress >= 75 && "✨ Hoàn thiện kế hoạch tuần mới..."}
+            </Typography>
+
+            <Box sx={{ position: 'relative', width: '100%', mb: 2 }}>
+              <Box
+                sx={{
+                  width: '100%',
+                  height: 12,
+                  backgroundColor: '#333',
+                  borderRadius: 6,
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: `${aiProgress}%`,
+                    height: '100%',
+                    background: 'linear-gradient(45deg, #dc2d2d, #ff6b6b)',
+                    borderRadius: 6,
+                    transition: 'width 0.8s ease',
+                  }}
+                />
+              </Box>
+              <Typography
+                variant="body2"
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '0.875rem',
+                }}
+              >
+                {aiProgress}%
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
+              {[0, 1, 2].map((dot) => (
+                <Box
+                  key={dot}
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: '#dc2d2d',
+                    animation: `bounce 1.4s infinite ${dot * 0.16}s`,
+                    '@keyframes bounce': {
+                      '0%, 80%, 100%': {
+                        transform: 'scale(0.8)',
+                        opacity: 0.5,
+                      },
+                      '40%': {
+                        transform: 'scale(1)',
+                        opacity: 1,
+                      },
+                    },
+                  }}
+                />
+              ))}
+            </Box>
+          </Box>
+        </Fade>
+      </Backdrop>
+
+      {/* Snackbar thông báo */}
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={4000}
+        autoHideDuration={6000}
         onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           severity="success"
-          sx={{ width: "100%", borderRadius: 2, boxShadow: 6 }}
+          variant="filled"
+          sx={{
+            borderRadius: 3,
+            bgcolor: '#4caf50',
+            fontWeight: 'bold',
+            '& .MuiAlert-icon': {
+              fontSize: '1.5rem',
+            }
+          }}
         >
-          🤖 Cảm ơn bạn! Kế hoạch tuần sau sẽ được điều chỉnh.
+          🎉 Kế hoạch tuần sau đã được điều chỉnh! Hãy kiểm tra lộ trình mới.
         </Alert>
       </Snackbar>
     </Box>
