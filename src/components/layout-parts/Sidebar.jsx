@@ -11,10 +11,21 @@ import logo from "../../assets/logo.png";
 import { NavLink } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../../stores/UserContext";
+import { logout as authLogout } from "../../services/authService";
 
 
 const Sidebar = () => {
-  const { user } = useContext(UserContext);
+  const { user, logout } = useContext(UserContext);
+
+  const handleLogout = async () => {
+    try {
+      await authLogout();
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+      logout();
+      window.location.href = "/login";
+    }
+  };
   return (
     <div className="sticky top-0 left-0 h-screen w-64 bg-black text-gray-200 flex flex-col justify-between p-4">
       {/* Logo */}
@@ -96,7 +107,10 @@ const Sidebar = () => {
 
       {/* Logout */}
       <div>
-        <button className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white transition">
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white transition"
+        >
           <Logout fontSize="large" /> Logout
         </button>
       </div>

@@ -10,17 +10,25 @@ import logo from "../../assets/logo.png"; // Dùng lại logo cũ
 import { NavLink } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../../stores/UserContext"; // Lấy thông tin user (admin)
+import { logout as authLogout } from "../../services/authService"; // Import logout từ authService
 
 const AdminSidebar = () => {
-  const { user } = useContext(UserContext);
+  const { user, logout } = useContext(UserContext);
 
-  // Hàm xử lý đăng xuất (tạm thời, có thể hoàn thiện sau)
-  const handleLogout = () => {
-    // Gọi hàm logout từ UserContext hoặc authService
-    console.log("Đăng xuất...");
-    // Ví dụ: logout(); // Cần import hàm logout nếu dùng
-    // Hoặc điều hướng về trang login
-    // navigate('/login');
+  // Hàm xử lý đăng xuất
+  const handleLogout = async () => {
+    try {
+      // 1. Gọi API logout từ backend
+      await authLogout();
+      
+      // 2. Nếu API logout thành công, authLogout sẽ redirect về /login
+      // (Nếu muốn thêm logic sau logout, có thể extend hàm này)
+    } catch (error) {
+      console.error("Lỗi khi đăng xuất:", error);
+      // Dù có lỗi API, vẫn logout phía client
+      logout(); // Gọi logout từ UserContext
+      window.location.href = "/login";
+    }
   };
 
   return (
